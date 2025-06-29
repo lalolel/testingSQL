@@ -1,0 +1,62 @@
+-- SQLite Friends Table Project
+-- This script demonstrates basic SQL operations: CREATE, INSERT, SELECT, UPDATE, ALTER, DELETE
+
+-- Task 1: Create a table named 'friends' with three columns
+-- Creating the friends table with id (INTEGER), name (TEXT), and birthday (DATE)
+CREATE TABLE friends (
+    id INTEGER,
+    name TEXT,
+    birthday DATE
+);
+
+-- Task 2: Add Ororo Munroe to friends table
+-- Inserting Ororo Munroe's data with her birthday as May 30th, 1940
+INSERT INTO friends (id, name, birthday)
+VALUES (1, 'Ororo Munroe', '1940-05-30');
+
+-- Task 3: Check if the table was created and Ororo was added
+-- This SELECT statement retrieves all records from the friends table
+SELECT * 
+FROM friends;
+
+-- Task 4: Add two more friends to the table
+-- Adding two fictional friends with their respective birthdays
+INSERT INTO friends (id, name, birthday)
+VALUES 
+    (2, 'John Smith', '1995-03-15'),
+    (3, 'Sarah Johnson', '1992-08-22');
+
+-- Task 5: Update Ororo Munroe's name to "Storm"
+-- Using UPDATE to change Ororo's name since she decided to go by Storm
+UPDATE friends
+SET name = 'Storm'
+WHERE id = 1;
+
+-- Task 6: Add a new column named 'email'
+-- Using ALTER TABLE to add an email column of TEXT type
+ALTER TABLE friends
+ADD COLUMN email TEXT;
+
+-- Task 7: Update email addresses for everyone in the table
+-- Adding email addresses for all three friends in the database
+UPDATE friends
+SET email = 'storm@codecademy.com'
+WHERE id = 1;
+
+UPDATE friends
+SET email = 'john.smith@email.com'
+WHERE id = 2;
+
+UPDATE friends
+SET email = 'sarah.johnson@email.com'
+WHERE id = 3;
+
+-- Task 8: Remove Storm from the friends table
+-- Using DELETE to remove Storm since she's fictional
+DELETE FROM friends
+WHERE name = 'Storm';
+
+-- Task 9: Final check - display all remaining records
+-- This final SELECT shows the current state of the friends table
+SELECT * 
+FROM friends;
