@@ -1,0 +1,123 @@
+-- Hacker News Analysis - SQLite Queries
+-- Data Science Foundations Project
+
+-- Task 1: Find the most popular Hacker News stories (top 5 highest scores)
+SELECT title, score
+FROM hacker_news
+ORDER BY score DESC
+LIMIT 5;
+
+-- Task 2: Find the total score of all stories (to check the 1-9-90 rule)
+SELECT SUM(score) AS total_score
+FROM hacker_news;
+
+-- Task 3: Find users who have combined scores of more than 200
+SELECT user, SUM(score) AS combined_score
+FROM hacker_news
+GROUP BY user
+HAVING SUM(score) > 200
+ORDER BY combined_score DESC;
+
+-- Task 4: Calculate the percentage of total points earned by power users (>200 points)
+SELECT 
+    (SELECT SUM(score) 
+     FROM hacker_news 
+     WHERE user IN (
+         SELECT user 
+         FROM hacker_news 
+         GROUP BY user 
+         HAVING SUM(score) > 200
+     )) * 1.0 / 
+    (SELECT SUM(score) FROM hacker_news) * 100 AS percentage_by_power_users;
+
+-- Task 5: Find rickroll offenders - users posting the YouTube rickroll link
+SELECT user, COUNT(*) AS rickroll_count
+FROM hacker_news
+WHERE url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+GROUP BY user
+ORDER BY rickroll_count DESC;
+
+-- Task 6: Categorize stories by source (GitHub, Medium, New York Times)
+SELECT CASE
+    WHEN url LIKE '%github.com%' THEN 'GitHub'
+    WHEN url LIKE '%medium.com%' THEN 'Medium'
+    WHEN url LIKE '%nytimes.com%' THEN 'New York Times'
+    ELSE 'Other'
+END AS 'Source'
+FROM hacker_news;
+
+-- Task 7: Count stories from each source and group by source
+SELECT CASE
+    WHEN url LIKE '%github.com%' THEN 'GitHub'
+    WHEN url LIKE '%medium.com%' THEN 'Medium'
+    WHEN url LIKE '%nytimes.com%' THEN 'New York Times'
+    ELSE 'Other'
+END AS 'Source',
+COUNT(*) AS story_count
+FROM hacker_news
+GROUP BY 1
+ORDER BY story_count DESC;
+
+-- Task 8: Look at the timestamp column format
+SELECT timestamp
+FROM hacker_news
+LIMIT 10;
+
+-- Task 9: Test the strftime() function to extract hours
+SELECT timestamp,
+    strftime('%H', timestamp) AS hour
+FROM hacker_news
+GROUP BY 1
+LIMIT 20;
+
+-- Task 10: Find best posting times - hours, average score, and story count
+SELECT strftime('%H', timestamp) AS hour,
+    AVG(score) AS average_score,
+    COUNT(*) AS story_count
+FROM hacker_news
+WHERE timestamp IS NOT NULL
+GROUP BY hour
+ORDER BY average_score DESC;
+
+-- Task 11: Enhanced version with rounded averages and readable column names
+SELECT strftime('%H', timestamp) AS 'Hour',
+    ROUND(AVG(score), 2) AS 'Average Score',
+    COUNT(*) AS 'Number of Stories'
+FROM hacker_news
+WHERE timestamp IS NOT NULL
+GROUP BY 1
+ORDER BY 2 DESC;
+
+-- BONUS QUERIES for deeper analysis:
+
+-- Best posting hours with more context (including day of week)
+SELECT strftime('%H', timestamp) AS 'Hour',
+    strftime('%w', timestamp) AS 'Day of Week',
+    ROUND(AVG(score), 2) AS 'Average Score',
+    COUNT(*) AS 'Number of Stories'
+FROM hacker_news
+WHERE timestamp IS NOT NULL
+GROUP BY 1, 2
+ORDER BY 3 DESC;
+
+-- Most active users overall
+SELECT user,
+    COUNT(*) AS stories_submitted,
+    SUM(score) AS total_score,
+    ROUND(AVG(score), 2) AS avg_score_per_story
+FROM hacker_news
+WHERE user IS NOT NULL
+GROUP BY user
+ORDER BY stories_submitted DESC
+LIMIT 10;
+
+-- Stories with highest engagement (score per hour since posting)
+SELECT title,
+    score,
+    user,
+    timestamp,
+    url
+FROM hacker_news
+WHERE score > 1000
+ORDER BY score DESC
+LIMIT 15;
