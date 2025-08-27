@@ -1,0 +1,192 @@
+-- Lyft Trip Data Analysis - SQLite Queries
+-- Data Science Foundations Project - JOIN Operations
+
+-- Task 1: Examine the three tables to understand their structure
+SELECT * FROM trips;
+
+SELECT * FROM riders;
+
+SELECT * FROM cars;
+
+-- Task 2: Identify primary keys
+-- Primary key of trips: id
+-- Primary key of riders: id  
+-- Primary key of cars: id
+
+-- You can verify primary keys with:
+-- PRAGMA table_info(trips);
+-- PRAGMA table_info(riders);
+-- PRAGMA table_info(cars);
+
+-- Task 3: Try a simple cross join between riders and cars
+SELECT *
+FROM riders
+CROSS JOIN cars;
+
+-- Note: Cross join creates a Cartesian product - every rider paired with every car
+-- This is usually not useful for real analysis as it creates too many meaningless combinations
+
+-- Task 4: Create Trip Log - LEFT JOIN trips with riders
+SELECT *
+FROM trips
+LEFT JOIN riders
+ON trips.rider_id = riders.id;
+
+-- Alternative with specific columns for cleaner output:
+SELECT trips.id AS trip_id,
+       trips.date,
+       trips.pickup,
+       trips.dropoff,
+       trips.cost,
+       riders.first,
+       riders.last,
+       riders.username,
+       riders.phone,
+       riders.total_trips
+FROM trips
+LEFT JOIN riders
+ON trips.rider_id = riders.id;
+
+-- Task 5: Link trips with cars using INNER JOIN
+SELECT *
+FROM trips
+INNER JOIN cars
+ON trips.car_id = cars.id;
+
+-- Alternative with specific columns:
+SELECT trips.id AS trip_id,
+       trips.date,
+       trips.pickup,
+       trips.dropoff,
+       trips.cost,
+       cars.model,
+       cars.OS,
+       cars.status,
+       cars.trips_completed
+FROM trips
+INNER JOIN cars
+ON trips.car_id = cars.id;
+
+-- Task 6: Stack riders table on top of riders2 using UNION
+SELECT *
+FROM riders
+UNION
+SELECT *
+FROM riders2;
+
+-- BONUS QUERIES AND AGGREGATES
+
+-- Task 7: Calculate average cost for a trip
+SELECT AVG(cost) AS average_trip_cost
+FROM trips;
+
+-- Task 8: Find irregular users (riders who have used Lyft less than 500 times)
+SELECT *
+FROM riders
+WHERE total_trips < 500;
+
+-- Alternative with more readable output:
+SELECT first,
+       last,
+       username,
+       total_trips
+FROM riders
+WHERE total_trips < 500
+ORDER BY total_trips DESC;
+
+-- Task 9: Calculate number of active cars
+SELECT COUNT(*) AS active_cars
+FROM cars
+WHERE status = 'active';
+
+-- Task 10: Find two cars with highest trips_completed (safety recall)
+SELECT *
+FROM cars
+ORDER BY trips_completed DESC
+LIMIT 2;
+
+-- Alternative with more specific information:
+SELECT id,
+       model,
+       OS,
+       status,
+       trips_completed
+FROM cars
+ORDER BY trips_completed DESC
+LIMIT 2;
+
+-- ADDITIONAL ANALYSIS QUERIES FOR DEEPER INSIGHTS
+
+-- Most popular pickup locations
+SELECT pickup,
+       COUNT(*) AS trip_count
+FROM trips
+GROUP BY pickup
+ORDER BY trip_count DESC;
+
+-- Most popular dropoff locations
+SELECT dropoff,
+       COUNT(*) AS trip_count
+FROM trips
+GROUP BY dropoff
+ORDER BY trip_count DESC;
+
+-- Revenue analysis by car model
+SELECT cars.model,
+       COUNT(trips.id) AS total_trips,
+       SUM(trips.cost) AS total_revenue,
+       ROUND(AVG(trips.cost), 2) AS avg_trip_cost
+FROM trips
+INNER JOIN cars ON trips.car_id = cars.id
+GROUP BY cars.model
+ORDER BY total_revenue DESC;
+
+-- Top spending riders
+SELECT riders.first,
+       riders.last,
+       riders.username,
+       COUNT(trips.id) AS trips_taken,
+       SUM(trips.cost) AS total_spent,
+       ROUND(AVG(trips.cost), 2) AS avg_cost_per_trip
+FROM riders
+LEFT JOIN trips ON riders.id = trips.rider_id
+GROUP BY riders.id
+ORDER BY total_spent DESC;
+
+-- Car utilization analysis
+SELECT cars.id,
+       cars.model,
+       cars.status,
+       cars.trips_completed,
+       COUNT(trips.id) AS trips_in_dataset,
+       ROUND(AVG(trips.cost), 2) AS avg_revenue_per_trip
+FROM cars
+LEFT JOIN trips ON cars.id = trips.car_id
+GROUP BY cars.id
+ORDER BY cars.trips_completed DESC;
+
+-- Daily trip analysis
+SELECT date,
+       COUNT(*) AS trips_count,
+       SUM(cost) AS daily_revenue,
+       ROUND(AVG(cost), 2) AS avg_trip_cost
+FROM trips
+GROUP BY date
+ORDER BY date;
+
+-- Complete trip information with all details
+SELECT trips.id AS trip_id,
+       trips.date,
+       trips.pickup,
+       trips.dropoff,
+       trips.cost,
+       riders.first || ' ' || riders.last AS rider_name,
+       riders.username,
+       riders.total_trips AS rider_total_trips,
+       cars.model AS car_model,
+       cars.OS AS car_os,
+       cars.status AS car_status
+FROM trips
+LEFT JOIN riders ON trips.rider_id = riders.id
+LEFT JOIN cars ON trips.car_id = cars.id
+ORDER BY trips.date, trips.id;
